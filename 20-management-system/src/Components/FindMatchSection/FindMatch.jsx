@@ -1,5 +1,5 @@
 import React from 'react'
-import Perfectmatch from './Perfectmatch.jsx'
+import Perfectmatch from './PerfectMatch.jsx'
 import FindmatchCompanies from './FindmatchCompanies.jsx'
 
 const FindMatch = () => {
