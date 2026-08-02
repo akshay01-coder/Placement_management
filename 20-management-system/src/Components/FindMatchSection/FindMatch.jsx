@@ -1,6 +1,6 @@
 import React from 'react'
-import Perfectmatch from './Perfectmatch'
-import FindmatchCompanies from './FindmatchCompanies'
+import Perfectmatch from './Perfectmatch.jsx'
+import FindmatchCompanies from './FindmatchCompanies.jsx'
 
 const FindMatch = () => {
   return (
