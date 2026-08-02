@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+body{
+    background: linear-gradient(
+        135deg,
+        #0f0f1a 0%,
+        #190f3b 60%,
+        #523da9 100%
+    );
+    min-height: 100vh;
+}
+
+.hide-scrollbar::-webkit-scrollbar{
+    display: none;
+}
+
+.hide-scrollbar{
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

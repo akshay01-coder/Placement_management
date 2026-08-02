@@ -1,0 +1,21 @@
+# Node dependencies
+**/node_modules/
+
+# Local Environment Variables (Saves private MongoDB cluster keys and Gmail SMTP passwords)
+**/server/.env
+.env
+
+# Production Build folders
+**/20-management-system/dist/
+dist/
+
+# Local uploads (Resumes, Marksheets, profile pictures uploaded locally)
+**/server/uploads/*
+!**/server/uploads/.gitkeep
+uploads/
+
+# OS/Editor configs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
