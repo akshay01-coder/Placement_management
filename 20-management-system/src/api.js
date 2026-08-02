@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000'
+  baseURL: 'https://placement-management-36bb.onrender.com'
 });
 
 // Interceptor to add Authorization Bearer token to headers dynamically
