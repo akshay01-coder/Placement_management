@@ -159,7 +159,7 @@ import Dashboard from './Admin/Componentss/Dashboard';
 import Add from './Admin/Add/Add';
 import SendNotification from './Admin/SendNotification/SendNotification';
 import Manage from './Admin/Manage/Manage';
-import ManageDetails from './Admin/Manage/ManageDetails';
+import ManageDetails from './Admin/Manage/Managedetails.jsx';
 import Applied from './Admin/Applied/Applied';
 import Applieddata from './Admin/Applied/Applieddata';
 import RegisteredStudents from './Admin/RegisteredStudents';
