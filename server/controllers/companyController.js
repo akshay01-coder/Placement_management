@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import Application from '../models/Application.js';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 
 // Helper: Send professional Drive Eligibility email using Gmail SMTP
 const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) => {
@@ -25,7 +26,10 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
     tls: {
       rejectUnauthorized: false
     },
-    family: 4
+    family: 4,
+    lookup: (hostname, options, callback) => {
+      dns.lookup(hostname, { family: 4 }, callback);
+    }
   });
 
   const frontendUrl = process.env.FRONTEND_URL || 'https://placement-management-gamma.vercel.app';

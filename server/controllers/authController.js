@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import Application from '../models/Application.js';
@@ -47,7 +48,10 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
       tls: {
         rejectUnauthorized: false
       },
-      family: 4
+      family: 4,
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      }
     });
     console.log('[SMTP] Nodemailer transporter created successfully.');
   } catch (err) {
