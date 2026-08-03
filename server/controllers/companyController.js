@@ -24,7 +24,8 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
     },
     tls: {
       rejectUnauthorized: false
-    }
+    },
+    family: 4
   });
 
   const frontendUrl = process.env.FRONTEND_URL || 'https://placement-management-gamma.vercel.app';
