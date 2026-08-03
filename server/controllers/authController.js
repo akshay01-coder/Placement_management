@@ -3,6 +3,8 @@ import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import Application from '../models/Application.js';
+import Company from '../models/Company.js';
+import Notification from '../models/Notification.js';
 
 // Helper: Generate JWT token
 const generateToken = (id) => {
@@ -148,6 +150,24 @@ export const sendOTP = async (req, res) => {
   }
 };
 
+// Helper: Seed notifications for all pre-existing active companies to a new student
+const seedInitialNotificationsForStudent = async (studentId) => {
+  try {
+    const companies = await Company.find({ status: 'Active' });
+    if (companies.length > 0) {
+      const initialNotifications = companies.map(company => ({
+        title: `New Placement Drive: ${company.name}`,
+        message: `A new drive for the role of ${company.role} is live. Package: ${company.packageLpa}. Visit Date: ${new Date(company.visitDate).toLocaleDateString()}. Minimum CGPA requirement: ${company.cgpa}.`,
+        studentId: studentId
+      }));
+      await Notification.insertMany(initialNotifications);
+      console.log(`[SIGNUP] Seeded ${initialNotifications.length} notifications for new student ${studentId}.`);
+    }
+  } catch (notifErr) {
+    console.error('[SIGNUP NOTIF ERROR] Failed to seed pre-existing companies notifications:', notifErr.message);
+  }
+};
+
 // @desc    Register a new student
 // @route   POST /api/auth/register
 // @access  Public
@@ -197,6 +217,7 @@ export const registerStudent = async (req, res) => {
       
       await emailExists.save();
       await OTP.deleteOne({ _id: otpRecord._id });
+      await seedInitialNotificationsForStudent(emailExists._id);
 
       return res.status(201).json({
         success: true,
@@ -226,6 +247,7 @@ export const registerStudent = async (req, res) => {
     });
 
     await OTP.deleteOne({ _id: otpRecord._id });
+    await seedInitialNotificationsForStudent(student._id);
 
     res.status(201).json({
       success: true,

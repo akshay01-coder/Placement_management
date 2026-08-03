@@ -3,6 +3,30 @@ import { Users, FileText, Trash2, ShieldAlert, Eye, GraduationCap, MapPin } from
 import api from '../api';
 
 const RegisteredStudents = () => {
+  const serverUrl = api.defaults.baseURL || 'http://localhost:5000';
+  
+  const getFileUrl = (pathOrDataUri) => {
+    if (!pathOrDataUri) return '';
+    if (pathOrDataUri.startsWith('data:')) {
+      try {
+        const parts = pathOrDataUri.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        const blob = new Blob([uInt8Array], { type: contentType });
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.error('Base64 to Blob conversion failed:', err);
+        return pathOrDataUri;
+      }
+    }
+    return `${serverUrl}${pathOrDataUri}`;
+  };
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
@@ -148,7 +172,7 @@ const RegisteredStudents = () => {
                     <td className="p-4">
                       {student.resume ? (
                         <a
-                          href={`http://localhost:5000${student.resume}`}
+                          href={getFileUrl(student.resume)}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/40 text-purple-200 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 w-fit transition-all"
@@ -258,7 +282,7 @@ const RegisteredStudents = () => {
                       <span className="text-[11px] text-gray-400">Marksheet Document:</span>
                       {selectedStudent.educationalDetails.class10.marksheet ? (
                         <a
-                          href={`http://localhost:5000${selectedStudent.educationalDetails.class10.marksheet}`}
+                          href={getFileUrl(selectedStudent.educationalDetails.class10.marksheet)}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg text-[10px] font-bold"
@@ -289,7 +313,7 @@ const RegisteredStudents = () => {
                       <span className="text-[11px] text-gray-400">Marksheet Document:</span>
                       {selectedStudent.educationalDetails.class12.marksheet ? (
                         <a
-                          href={`http://localhost:5000${selectedStudent.educationalDetails.class12.marksheet}`}
+                          href={getFileUrl(selectedStudent.educationalDetails.class12.marksheet)}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg text-[10px] font-bold"
@@ -325,7 +349,7 @@ const RegisteredStudents = () => {
                           <p className="text-gray-400">SGPA: <span className="text-green-400 font-bold">{sem.sgpa || '0.0'}</span></p>
                           {sem.marksheet ? (
                             <a
-                              href={`http://localhost:5000${sem.marksheet}`}
+                              href={getFileUrl(sem.marksheet)}
                               target="_blank"
                               rel="noreferrer"
                               className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-2 py-0.5 rounded text-[9px] font-bold"

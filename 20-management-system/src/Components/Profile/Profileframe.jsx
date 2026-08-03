@@ -137,6 +137,30 @@ import api from '../../api';
 
 const Profileframe = () => {
   const navigate = useNavigate();
+  const serverUrl = api.defaults.baseURL || 'http://localhost:5000';
+  
+  const getFileUrl = (pathOrDataUri) => {
+    if (!pathOrDataUri) return '';
+    if (pathOrDataUri.startsWith('data:')) {
+      try {
+        const parts = pathOrDataUri.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        const blob = new Blob([uInt8Array], { type: contentType });
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.error('Base64 to Blob conversion failed:', err);
+        return pathOrDataUri;
+      }
+    }
+    return `${serverUrl}${pathOrDataUri}`;
+  };
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -185,14 +209,15 @@ const Profileframe = () => {
         });
         
         if (user.profilePhoto) {
-          setAvatar(`http://localhost:5000${user.profilePhoto}`);
+          setAvatar(getFileUrl(user.profilePhoto));
         }
         if (user.resume) {
-          // Extract filename from path
-          const rawName = user.resume.split('-').slice(2).join('-');
+          // Extract filename from path if it's a file path, otherwise default
+          const isBase64 = user.resume.startsWith('data:');
+          const rawName = isBase64 ? 'student_resume.pdf' : user.resume.split('-').slice(2).join('-');
           setResume({
             fileName: rawName || 'resume.pdf',
-            fileUrl: `http://localhost:5000${user.resume}`
+            fileUrl: getFileUrl(user.resume)
           });
         }
 
@@ -243,6 +268,13 @@ const Profileframe = () => {
 
   // Handle Input Changes
   const handleInputChange = (e) => {
+    if (e.target.name === 'cgpa') {
+      const val = e.target.value;
+      if (val !== "" && parseFloat(val) > 10) {
+        alert("CGPA cannot be more than 10");
+        return;
+      }
+    }
     setUserData({ ...userData, [e.target.name]: e.target.value });
   };
 
@@ -271,6 +303,10 @@ const Profileframe = () => {
 
   const handleSemesterSgpaChange = (e, semesterNumber) => {
     const value = e.target.value;
+    if (value !== "" && parseFloat(value) > 10) {
+      alert("SGPA cannot be more than 10");
+      return;
+    }
     setEduDetails(prev => {
       const semesters = [...prev.college.semesters];
       const existing = semesters.find(s => s.semesterNumber === semesterNumber);
@@ -296,7 +332,7 @@ const Profileframe = () => {
         const res = await api.post('/api/students/upload-photo', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        setAvatar(`http://localhost:5000${res.data.photoUrl}`);
+        setAvatar(getFileUrl(res.data.photoUrl));
       } catch (error) {
         console.error('Photo upload error:', error);
         alert('Failed to upload profile photo.');
@@ -316,7 +352,7 @@ const Profileframe = () => {
         });
         setResume({
           fileName: file.name,
-          fileUrl: `http://localhost:5000${res.data.resumeUrl}`
+          fileUrl: getFileUrl(res.data.resumeUrl)
         });
       } catch (error) {
         console.error('Resume upload error:', error);
@@ -722,7 +758,7 @@ const Profileframe = () => {
               {eduDetails.class10.marksheet && (
                 <div className="flex gap-1.5 items-center">
                   <a
-                    href={`http://localhost:5000${eduDetails.class10.marksheet}`}
+                    href={getFileUrl(eduDetails.class10.marksheet)}
                     target="_blank"
                     rel="noreferrer"
                     className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg text-[10px] font-bold"
@@ -821,7 +857,7 @@ const Profileframe = () => {
               {eduDetails.class12.marksheet && (
                 <div className="flex gap-1.5 items-center">
                   <a
-                    href={`http://localhost:5000${eduDetails.class12.marksheet}`}
+                    href={getFileUrl(eduDetails.class12.marksheet)}
                     target="_blank"
                     rel="noreferrer"
                     className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-lg text-[10px] font-bold"
@@ -916,7 +952,7 @@ const Profileframe = () => {
                       {semObj.marksheet && (
                         <div className="flex gap-1.5 items-center">
                           <a
-                            href={`http://localhost:5000${semObj.marksheet}`}
+                            href={getFileUrl(semObj.marksheet)}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 text-emerald-300 px-2 py-0.5 rounded text-[9px] font-bold"

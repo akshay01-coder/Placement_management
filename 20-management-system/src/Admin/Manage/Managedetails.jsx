@@ -240,7 +240,14 @@ const ManageDetails = ({ companies, onDeleteCompany }) => {
               <input
                 type="text"
                 value={cgpa}
-                onChange={(e) => setCgpa(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val !== "" && parseFloat(val) > 10) {
+                    alert("Minimum CGPA cannot be more than 10");
+                    return;
+                  }
+                  setCgpa(val);
+                }}
                 required
                 className="mt-2 pl-3 bg-gray-800 h-10 rounded-xl border border-white/10 text-white outline-none"
               />

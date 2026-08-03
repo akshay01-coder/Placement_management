@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Company from '../models/Company.js';
+import fs from 'fs';
 
 // @desc    Get student profile
 // @route   GET /api/students/profile
@@ -100,8 +101,21 @@ export const uploadResume = async (req, res) => {
     }
 
     const student = await User.findById(req.user._id);
-    student.resume = `/uploads/${req.file.filename}`;
+    
+    // Convert uploaded file to base64 data URI
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const base64Data = fileBuffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${base64Data}`;
+
+    student.resume = dataUri;
     await student.save();
+
+    // Delete local temporary file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Failed to delete temporary resume file:', err.message);
+    }
 
     res.status(200).json({
       success: true,
@@ -125,8 +139,21 @@ export const uploadPhoto = async (req, res) => {
     }
 
     const student = await User.findById(req.user._id);
-    student.profilePhoto = `/uploads/${req.file.filename}`;
+    
+    // Convert uploaded file to base64 data URI
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const base64Data = fileBuffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${base64Data}`;
+
+    student.profilePhoto = dataUri;
     await student.save();
+
+    // Delete local temporary file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Failed to delete temporary photo file:', err.message);
+    }
 
     res.status(200).json({
       success: true,
@@ -231,13 +258,17 @@ export const uploadMarksheet = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student not found.' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Convert uploaded file to base64 data URI
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const base64Data = fileBuffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${base64Data}`;
+
     let updateQuery = {};
 
     if (type === 'class10') {
-      updateQuery = { $set: { 'educationalDetails.class10.marksheet': fileUrl } };
+      updateQuery = { $set: { 'educationalDetails.class10.marksheet': dataUri } };
     } else if (type === 'class12') {
-      updateQuery = { $set: { 'educationalDetails.class12.marksheet': fileUrl } };
+      updateQuery = { $set: { 'educationalDetails.class12.marksheet': dataUri } };
     } else if (type === 'semester') {
       const semNum = parseInt(semesterNumber);
       if (isNaN(semNum) || semNum < 1 || semNum > 8) {
@@ -248,11 +279,11 @@ export const uploadMarksheet = async (req, res) => {
       const semIndex = semesters.findIndex(s => s.semesterNumber === semNum);
 
       if (semIndex !== -1) {
-        updateQuery = { $set: { [`educationalDetails.college.semesters.${semIndex}.marksheet`]: fileUrl } };
+        updateQuery = { $set: { [`educationalDetails.college.semesters.${semIndex}.marksheet`]: dataUri } };
       } else {
         updateQuery = { 
           $push: { 
-            'educationalDetails.college.semesters': { semesterNumber: semNum, sgpa: 0, marksheet: fileUrl } 
+            'educationalDetails.college.semesters': { semesterNumber: semNum, sgpa: 0, marksheet: dataUri } 
           } 
         };
       }
@@ -262,10 +293,17 @@ export const uploadMarksheet = async (req, res) => {
 
     await User.updateOne({ _id: req.user._id }, updateQuery);
 
+    // Delete local temporary file
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Failed to delete temporary marksheet file:', err.message);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Marksheet uploaded successfully.',
-      fileUrl,
+      fileUrl: dataUri,
       fileName: req.file.originalname
     });
   } catch (error) {

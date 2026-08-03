@@ -10,6 +10,30 @@ import api from '../../api';
 
 const Applieddata = () => {
   const navigate = useNavigate();
+  const serverUrl = api.defaults.baseURL || 'http://localhost:5000';
+  
+  const getFileUrl = (pathOrDataUri) => {
+    if (!pathOrDataUri) return '';
+    if (pathOrDataUri.startsWith('data:')) {
+      try {
+        const parts = pathOrDataUri.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const rawLength = raw.length;
+        const uInt8Array = new Uint8Array(rawLength);
+        for (let i = 0; i < rawLength; ++i) {
+          uInt8Array[i] = raw.charCodeAt(i);
+        }
+        const blob = new Blob([uInt8Array], { type: contentType });
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.error('Base64 to Blob conversion failed:', err);
+        return pathOrDataUri;
+      }
+    }
+    return `${serverUrl}${pathOrDataUri}`;
+  };
+
   const { id } = useParams();
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -121,7 +145,7 @@ const Applieddata = () => {
                 <div className="lg:col-span-5 flex items-center gap-4">
                   {student.profilePhoto ? (
                     <img
-                      src={`http://localhost:5000${student.profilePhoto}`}
+                      src={getFileUrl(student.profilePhoto)}
                       alt={student.name}
                       className="w-14 h-14 rounded-2xl object-cover border border-indigo-400/30 shadow-md"
                     />
@@ -163,7 +187,7 @@ const Applieddata = () => {
                     </div>
                     {student.resume ? (
                       <a
-                        href={`http://localhost:5000${student.resume}`}
+                        href={getFileUrl(student.resume)}
                         target="_blank"
                         rel="noreferrer"
                         className="text-indigo-400 hover:underline text-xs font-semibold cursor-pointer"

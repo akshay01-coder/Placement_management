@@ -24,6 +24,8 @@ const Login = ({ onLoginSuccess }) => {
   const [otpSent, setOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const navigate = useNavigate();
   const timerRef = useRef(null);
@@ -72,6 +74,7 @@ const Login = ({ onLoginSuccess }) => {
       return;
     }
 
+    setAuthLoading(true);
     try {
       const response = await api.post('/api/auth/login', { email: loginId, password });
       const { token, user } = response.data;
@@ -79,6 +82,7 @@ const Login = ({ onLoginSuccess }) => {
       // Restrict Admins from logging in through Student Portal
       if (user.role === 'admin') {
         setErrorMessage('Admins must log in through the Admin Portal.');
+        setAuthLoading(false);
         return;
       }
 
@@ -105,9 +109,12 @@ const Login = ({ onLoginSuccess }) => {
         setOtpTimer(60);
         setSuccessMessage('Your email is unverified. A new verification OTP code was dispatched.');
         api.post('/api/auth/send-otp', { identifier: unverifiedEmail }).catch(err => console.error(err));
+        setAuthLoading(false);
         return;
       }
       setErrorMessage(error.response?.data?.message || 'Login failed. Please verify your credentials.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -116,11 +123,17 @@ const Login = ({ onLoginSuccess }) => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!name || !email || !password || !otp) {
+    if (!name || !email || !password || !confirmPassword || !otp) {
       setErrorMessage('Please fill in all required fields including the verification OTP.');
       return;
     }
 
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+
+    setAuthLoading(true);
     try {
       await api.post('/api/auth/register', {
         name,
@@ -137,11 +150,14 @@ const Login = ({ onLoginSuccess }) => {
       setSuccessMessage('Registration successful! You can now log in.');
       setIsSignUp(false);
       setOtp('');
+      setConfirmPassword('');
       setOtpSent(false);
       setOtpTimer(0);
     } catch (error) {
       console.error('Signup error:', error);
       setErrorMessage(error.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -285,6 +301,23 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
+          {/* Confirm Password (Only for registration) */}
+          {isSignUp && (
+            <div className="space-y-1.5 animate-fade-in">
+              <label className="text-xs font-medium text-gray-300 ml-1">Confirm Password *</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); setErrorMessage(''); }}
+                  placeholder="Confirm password"
+                  required
+                  className="w-full bg-[#1e1e38] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Student Profile (Only for registration) */}
           {isSignUp && (
             <>
@@ -311,7 +344,14 @@ const Login = ({ onLoginSuccess }) => {
                     min="0"
                     max="10"
                     value={cgpa}
-                    onChange={(e) => setCgpa(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val !== "" && parseFloat(val) > 10) {
+                        alert("CGPA cannot be more than 10");
+                        return;
+                      }
+                      setCgpa(val);
+                    }}
                     placeholder="e.g. 8.5"
                     required
                     className="w-full bg-[#1e1e38] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all"
@@ -383,9 +423,18 @@ const Login = ({ onLoginSuccess }) => {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:opacity-95 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-98 mt-2"
+            disabled={authLoading}
+            className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:opacity-95 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-98 mt-2 disabled:opacity-75 disabled:cursor-not-allowed"
           >
-            {isSignUp ? (
+            {authLoading ? (
+              <div className="flex items-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Processing...</span>
+              </div>
+            ) : isSignUp ? (
               <>
                 <UserPlus size={18} />
                 <span>{otpSent ? 'Verify & Register' : 'Send OTP'}</span>
