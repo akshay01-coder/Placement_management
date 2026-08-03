@@ -182,19 +182,80 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
     html: htmlContent
   };
 
-  // 4. Send the email
+//   // 4. Send the email
+//   try {
+//     console.log(`[SMTP] Calling sendMail() to deliver OTP to ${email}...`);
+//     const info = await transporter.sendMail(mailOptions);
+//     console.log('[SMTP SUCCESS] Email accepted by SMTP!');
+//     console.log(`[SMTP SUCCESS] Message ID: ${info.messageId}`);
+//     return info;
+//   } catch (err) {
+//     console.error(`[SMTP ERROR] sendMail() failed for recipient ${email}`);
+//     console.error('[SMTP ERROR DETAILS]:', err);
+//     throw err;
+//   }
+// };
+
+// 4. Send the email via Brevo REST API (No Nodemailer / No SMTP)
   try {
-    console.log(`[SMTP] Calling sendMail() to deliver OTP to ${email}...`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log('[SMTP SUCCESS] Email accepted by SMTP!');
-    console.log(`[SMTP SUCCESS] Message ID: ${info.messageId}`);
-    return info;
+    console.log(`[Brevo API] Sending OTP email to ${email}...`);
+
+    const postData = JSON.stringify({
+      sender: {
+        name: "Placement Portal",
+        email: "placementmanagement244@gmail.com" // Verified sender email
+      },
+      to: [{ email: email }],
+      subject: "Your OTP Verification Code",
+      htmlContent: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                      <h2>Placement Portal OTP Verification</h2>
+                      <p>Your OTP code is: <b style="font-size: 24px; color: #4A90E2;">${otp}</b></p>
+                      <p>This code will expire in 10 minutes.</p>
+                    </div>`
+    });
+
+    const https = require('https');
+    
+    const apiResponse = await new Promise((resolve, reject) => {
+      const req = https.request({
+        hostname: 'api.brevo.com',
+        port: 443,
+        path: '/v3/smtp/email',
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.EMAIL_PASS, // Brevo Key from Render Env
+          'content-type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      }, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => { responseBody += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(JSON.parse(responseBody));
+          } else {
+            reject(new Error(`Brevo API Error (${res.statusCode}): ${responseBody}`));
+          }
+        });
+      });
+
+      req.on('error', (err) => reject(err));
+      req.write(postData);
+      req.end();
+    });
+
+    console.log('[Brevo API SUCCESS] Email delivered via HTTP REST API!');
+    console.log('[Brevo API Response]:', apiResponse);
+    return apiResponse;
+
   } catch (err) {
-    console.error(`[SMTP ERROR] sendMail() failed for recipient ${email}`);
-    console.error('[SMTP ERROR DETAILS]:', err);
+    console.error(`[Brevo API ERROR] Failed to send email to ${email}`);
+    console.error('[Brevo API ERROR DETAILS]:', err.message || err);
     throw err;
   }
 };
+
 
 // @desc    Send OTP to email/phone
 // @route   POST /api/auth/send-otp
