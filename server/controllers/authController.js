@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import dns from 'dns';
+import https from 'https';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import Application from '../models/Application.js';
@@ -19,23 +20,19 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-const sendEmailViaBrevoAPI = async (toEmail, subject, htmlContent) => {
-  const apiKey = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
-  const senderEmail = (process.env.EMAIL_USER || 'placementmanagement244@gmail.com').trim();
-  
-  console.log(`[Brevo API] Sending email to ${toEmail} using HTTPS API...`);
-  
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': apiKey,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({
+const sendEmailViaBrevoAPI = (toEmail, subject, htmlContent) => {
+  return new Promise((resolve, reject) => {
+    const apiKey = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim().replace(/^['"]|['"]$/g, '');
+    
+    // Explicitly set verified sender email
+    const senderEmail = 'placementmanagement244@gmail.com';
+
+    console.log(`[Brevo API] Sending email to ${toEmail} using HTTPS API...`);
+
+    const postData = JSON.stringify({
       sender: {
         name: "Placement Portal",
-        email: senderEmail.toLowerCase()
+        email: senderEmail
       },
       to: [
         {
@@ -44,17 +41,52 @@ const sendEmailViaBrevoAPI = async (toEmail, subject, htmlContent) => {
       ],
       subject: subject,
       htmlContent: htmlContent
-    })
+    });
+
+    const options = {
+      hostname: 'api.brevo.com',
+      port: 443,
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+      res.on('end', () => {
+        let result = {};
+        try {
+          result = JSON.parse(body);
+        } catch (e) {
+          result = { message: body };
+        }
+
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log('[Brevo API SUCCESS] Message sent! Message ID:', result.messageId);
+          resolve(result);
+        } else {
+          console.error('[Brevo API ERROR] Response:', result);
+          reject(new Error(result.message || `Brevo HTTP error: ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('[Brevo API HTTP ERROR]:', err.message);
+      reject(err);
+    });
+
+    req.write(postData);
+    req.end();
   });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Brevo API error: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  console.log('[Brevo API SUCCESS] Message sent! Message ID:', result.messageId);
-  return result;
 };
 
 // Helper: Send professional OTP email using Gmail SMTP Nodemailer
