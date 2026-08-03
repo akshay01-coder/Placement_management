@@ -18,16 +18,12 @@ const Sidebar = () => {
       {/* Top Navigation Block */}
       <div>
         {/* Logo */}
-        <Link to="/admin-dashboard" className="h-20 flex items-center justify-center gap-3 border-b border-white/10 cursor-pointer">
+        <Link to="/admin-dashboard" className="h-20 flex items-center justify-center border-b border-white/10 cursor-pointer px-4">
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaki24Fme-CJCYQDRWxGfOcRJX08TNHsAj07M08EiR6mt5jiRHI_NrWUc&s=10"
-            alt="JPMS Logo"
-            className="h-12 w-12 rounded-full object-cover border-2 border-blue-400"
+            src="/logo.png"
+            alt="NextHire Logo"
+            className="h-12 w-auto object-contain"
           />
-
-          <h1 className="text-3xl font-bold text-blue-400 tracking-wider">
-            JPMS
-          </h1>
         </Link>
 
         {/* Menu */}

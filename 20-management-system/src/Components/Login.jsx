@@ -176,19 +176,20 @@ const Login = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-[#0d0d1f] flex items-center justify-center p-4 font-sans text-white">
-      <div className="w-full max-w-[460px] bg-[#16162a]/90 border border-white/10 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
+      <div className="w-full max-w-[460px] bg-[#16162a]/90 border border-white/10 rounded-3xl py-6 px-8 shadow-2xl backdrop-blur-xl">
         
         {/* Header Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-3">
-            <GraduationCap size={36} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-wider text-white">SPMS</h1>
-          <p className="text-gray-400 text-xs mt-1 font-medium">Smart Placement Management System</p>
+        <div className="flex flex-col items-center mb-5">
+          <img
+            src="/logo.png"
+            alt="NextHire Logo"
+            className="w-full max-w-[125px] h-auto object-contain mb-2.5"
+          />
+          <p className="text-gray-400 text-xs mt-0 font-medium">Your Gateway to Career Success</p>
         </div>
 
         {/* Toggle between Login and Signup */}
-        <div className="flex bg-[#1e1e38] p-1 rounded-xl mb-5">
+        <div className="flex bg-[#1e1e38] p-1 rounded-xl mb-3">
           <button
             type="button"
             onClick={() => { setIsSignUp(false); setErrorMessage(''); setSuccessMessage(''); }}

@@ -24,13 +24,12 @@ const Navbar = () => {
     <div className="h-16 bg-[#0F172A] border-b border-white/10 px-6 flex items-center justify-between shadow-xl">
       
       {/* Left: Logo Section */}
-      <Link to="/student-dashboard" className="flex items-center gap-3">
+      <Link to="/student-dashboard" className="flex items-center">
         <img
-          className="h-10 w-10 rounded-full object-cover border-2 border-blue-400"
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxCDuxB1qucZ89Oz7hu6flzA_89jiHWyLcd38MYk2BdhWsywiO2BU1lN8&s=10"
-          alt="Campus logo"
+          className="h-10 w-auto object-contain"
+          src="/logo.png"
+          alt="NextHire Logo"
         />
-        <h1 className="text-blue-400 text-2xl font-bold tracking-wider">JPMS</h1>
       </Link>
 
       {/* Middle: Navigation Links */}

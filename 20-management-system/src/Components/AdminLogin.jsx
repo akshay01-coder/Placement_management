@@ -59,19 +59,20 @@ const AdminLogin = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen bg-[#0d091f] flex items-center justify-center p-4 font-sans text-white">
-      <div className="w-full max-w-[460px] bg-[#16122a]/95 border border-purple-500/20 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
+      <div className="w-full max-w-[460px] bg-[#16122a]/95 border border-purple-500/20 rounded-3xl py-6 px-8 shadow-2xl backdrop-blur-xl">
         
         {/* Header Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-tr from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-3">
-            <Shield size={36} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-wider text-white">SPMS Admin</h1>
-          <p className="text-purple-300/80 text-xs mt-1 font-medium">Smart Placement Management - Admin Portal</p>
+        <div className="flex flex-col items-center mb-5">
+          <img
+            src="/logo.png"
+            alt="NextHire Logo"
+            className="w-full max-w-[125px] h-auto object-contain mb-2.5"
+          />
+          <p className="text-purple-300/80 text-xs mt-0 font-medium">Your Gateway to Career Success - Admin Portal</p>
         </div>
 
         {/* Info Box */}
-        <div className="bg-purple-900/10 border border-purple-500/10 rounded-xl p-3 mb-5 text-center text-xs text-purple-300">
+        <div className="bg-purple-900/10 border border-purple-500/10 rounded-xl p-3 mb-3 text-center text-xs text-purple-300">
           Enter your official administrator credentials to log in.
         </div>
 
