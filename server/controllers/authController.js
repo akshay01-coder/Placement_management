@@ -19,6 +19,44 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const sendEmailViaBrevoAPI = async (toEmail, subject, htmlContent) => {
+  const apiKey = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
+  const senderEmail = (process.env.EMAIL_USER || 'placementmanagement244@gmail.com').trim();
+  
+  console.log(`[Brevo API] Sending email to ${toEmail} using HTTPS API...`);
+  
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "Placement Portal",
+        email: senderEmail.toLowerCase()
+      },
+      to: [
+        {
+          email: toEmail.toLowerCase().trim()
+        }
+      ],
+      subject: subject,
+      htmlContent: htmlContent
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Brevo API error: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  console.log('[Brevo API SUCCESS] Message sent! Message ID:', result.messageId);
+  return result;
+};
+
 // Helper: Send professional OTP email using Gmail SMTP Nodemailer
 const sendOTPEmail = async (email, otp, type = 'verification') => {
   const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
@@ -32,6 +70,37 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
     const errorMsg = 'SMTP credentials are not configured or still have default placeholder values in .env file.';
     console.error(`[SMTP ERROR] ${errorMsg}`);
     throw new Error(errorMsg);
+  }
+
+  const subject = type === 'verification' 
+    ? 'Email Verification - Placement Management System' 
+    : 'Password Reset - Placement Management System';
+
+  const messageHeading = type === 'verification'
+    ? 'Verify Your Email Address'
+    : 'Reset Your Password';
+
+  const messageText = type === 'verification'
+    ? 'Thank you for registering. Use the following 6-digit One-Time Password (OTP) to verify your account:'
+    : 'You requested a password reset. Use the following 6-digit One-Time Password (OTP) to reset your password:';
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; max-width: 500px; margin: auto; border-radius: 12px; border: 1px solid #ddd;">
+      <h2 style="color: #6366f1; text-align: center;">${messageHeading}</h2>
+      <p>Hello,</p>
+      <p>${messageText}</p>
+      <div style="font-size: 28px; font-weight: bold; letter-spacing: 5px; padding: 15px; background-color: #e0e7ff; text-align: center; border-radius: 8px; color: #4338ca; margin: 15px 0;">
+        ${otp}
+      </div>
+      <p style="color: #555;">This OTP is valid for 5 minutes. Please do not share it with anyone.</p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+      <p style="font-size: 11px; color: #888; text-align: center;">This is an automated email. Please do not reply.</p>
+    </div>
+  `;
+
+  // Check if credentials are Brevo API key -> Bypass SMTP completely and send over HTTPS port 443!
+  if (emailPass.trim().startsWith('xsmtpsib-') || emailPass.trim().startsWith('xkeysib-')) {
+    return await sendEmailViaBrevoAPI(email, subject, htmlContent);
   }
 
   // 1. Configure Nodemailer dynamically based on SMTP environment variables (supports Brevo on Port 2525)
@@ -73,45 +142,19 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
     throw err;
   }
 
-  // 3. Configure mail options
-  const subject = type === 'verification' 
-    ? 'Email Verification - Placement Management System' 
-    : 'Password Reset - Placement Management System';
-
-  const messageHeading = type === 'verification'
-    ? 'Verify Your Email Address'
-    : 'Reset Your Password';
-
-  const messageText = type === 'verification'
-    ? 'Thank you for registering. Use the following 6-digit One-Time Password (OTP) to verify your account:'
-    : 'You requested a password reset. Use the following 6-digit One-Time Password (OTP) to reset your password:';
-
   const mailOptions = {
     from: `"Placement Portal" <${emailUser}>`,
     to: email.toLowerCase().trim(),
     subject: subject,
-    html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; max-width: 500px; margin: auto; border-radius: 12px; border: 1px solid #ddd;">
-        <h2 style="color: #6366f1; text-align: center;">${messageHeading}</h2>
-        <p>Hello,</p>
-        <p>${messageText}</p>
-        <div style="font-size: 28px; font-weight: bold; letter-spacing: 5px; padding: 15px; background-color: #e0e7ff; text-align: center; border-radius: 8px; color: #4338ca; margin: 15px 0;">
-          ${otp}
-        </div>
-        <p style="color: #555;">This OTP is valid for 5 minutes. Please do not share it with anyone.</p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-        <p style="font-size: 11px; color: #888; text-align: center;">This is an automated email. Please do not reply.</p>
-      </div>
-    `
+    html: htmlContent
   };
 
   // 4. Send the email
   try {
     console.log(`[SMTP] Calling sendMail() to deliver OTP to ${email}...`);
     const info = await transporter.sendMail(mailOptions);
-    console.log('[SMTP SUCCESS] Email accepted by Gmail SMTP!');
+    console.log('[SMTP SUCCESS] Email accepted by SMTP!');
     console.log(`[SMTP SUCCESS] Message ID: ${info.messageId}`);
-    console.log(`[SMTP SUCCESS] Response: ${info.response}\n`);
     return info;
   } catch (err) {
     console.error(`[SMTP ERROR] sendMail() failed for recipient ${email}`);

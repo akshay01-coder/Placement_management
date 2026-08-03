@@ -6,6 +6,44 @@ import nodemailer from 'nodemailer';
 import dns from 'dns';
 
 // Helper: Send professional Drive Eligibility email using Gmail SMTP
+const sendEmailViaBrevoAPI = async (toEmail, subject, htmlContent) => {
+  const apiKey = (process.env.EMAIL_PASS || process.env.SMTP_PASS || '').trim();
+  const senderEmail = (process.env.EMAIL_USER || 'placementmanagement244@gmail.com').trim();
+  
+  console.log(`[Brevo API] Sending email to ${toEmail} using HTTPS API...`);
+  
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "Placement Portal",
+        email: senderEmail.toLowerCase()
+      },
+      to: [
+        {
+          email: toEmail.toLowerCase().trim()
+        }
+      ],
+      subject: subject,
+      htmlContent: htmlContent
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Brevo API error: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  console.log('[Brevo API SUCCESS] Message sent! Message ID:', result.messageId);
+  return result;
+};
+
 const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) => {
   const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
   const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
@@ -15,33 +53,10 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
     return;
   }
 
-  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
-
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: smtpPort,
-    secure: smtpPort === 465,
-    auth: {
-      user: emailUser,
-      pass: emailPass
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    family: 4,
-    lookup: (hostname, options, callback) => {
-      dns.lookup(hostname, { family: 4 }, callback);
-    }
-  });
-
   const frontendUrl = process.env.FRONTEND_URL || 'https://placement-management-gamma.vercel.app';
-
-  const mailOptions = {
-    from: `"Placement Portal" <${emailUser}>`,
-    to: studentEmail,
-    subject: `New Placement Opportunity: ${companyDetails.name} - ${companyDetails.role}`,
-    html: `
+  const subject = `New Placement Opportunity: ${companyDetails.name} - ${companyDetails.role}`;
+  
+  const htmlContent = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; background-color: #0f172a; border-radius: 16px; color: #f8fafc; border: 1px solid rgba(99, 102, 241, 0.2);">
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="display: inline-block; padding: 12px; background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); border-radius: 12px; margin-bottom: 10px;">
@@ -103,7 +118,44 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
           This is an automated email alert sent because you are registered and meet the eligibility requirements. Please do not reply.
         </div>
       </div>
-    `
+    `;
+
+  // Check if credentials are Brevo API key -> Bypass SMTP completely and send over HTTPS port 443!
+  if (emailPass.trim().startsWith('xsmtpsib-') || emailPass.trim().startsWith('xkeysib-')) {
+    try {
+      await sendEmailViaBrevoAPI(studentEmail, subject, htmlContent);
+      console.log(`[Brevo API SUCCESS] Company alert sent to eligible student: ${studentEmail}`);
+    } catch (err) {
+      console.error(`[Brevo API ERROR] Failed to send company alert to ${studentEmail}:`, err.message);
+    }
+    return;
+  }
+
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
+
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: emailUser,
+      pass: emailPass
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    family: 4,
+    lookup: (hostname, options, callback) => {
+      dns.lookup(hostname, { family: 4 }, callback);
+    }
+  });
+
+  const mailOptions = {
+    from: `"Placement Portal" <${emailUser}>`,
+    to: studentEmail,
+    subject: subject,
+    html: htmlContent
   };
 
   try {
