@@ -33,16 +33,20 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
     throw new Error(errorMsg);
   }
 
-  // 1. Configure Nodemailer with Gmail SMTP
+  // 1. Configure Nodemailer with Gmail SMTP (Explicit Port 587 to avoid timeouts on Render)
   let transporter;
   try {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: emailUser,
         pass: emailPass
       },
-      family: 4
+      tls: {
+        rejectUnauthorized: false
+      }
     });
     console.log('[SMTP] Nodemailer transporter created successfully.');
   } catch (err) {
