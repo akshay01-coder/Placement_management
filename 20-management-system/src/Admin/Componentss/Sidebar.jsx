@@ -22,7 +22,7 @@ const Sidebar = () => {
           <img
             src="/logo.png"
             alt="NextHire Logo"
-            className="h-12 w-auto object-contain"
+            className="h-8 w-auto object-contain"
           />
         </Link>
 
