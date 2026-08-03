@@ -35,12 +35,13 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
   }
 
   // 1. Configure Nodemailer with Gmail SMTP (Explicit Port 587 to avoid timeouts on Render)
+  // 1. Configure Nodemailer with Gmail SMTP (Forced IPv4 & Fallback DNS)
   let transporter;
   try {
     transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true, // Port 465 ke liye secure true hona zaroori hai
       auth: {
         user: emailUser,
         pass: emailPass
@@ -48,7 +49,7 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
       tls: {
         rejectUnauthorized: false
       },
-      family: 4,
+      family: 4, // Strict IPv4 for Render to fix ENETUNREACH
       lookup: (hostname, options, callback) => {
         dns.lookup(hostname, { family: 4 }, callback);
       }
