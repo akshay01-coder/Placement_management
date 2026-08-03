@@ -121,7 +121,8 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
     `;
 
   // Check if credentials are Brevo API key -> Bypass SMTP completely and send over HTTPS port 443!
-  if (emailPass.trim().startsWith('xsmtpsib-') || emailPass.trim().startsWith('xkeysib-')) {
+  const cleanPass = emailPass.trim().replace(/^['"]|['"]$/g, '');
+  if (cleanPass.startsWith('xsmtpsib-') || cleanPass.startsWith('xkeysib-')) {
     try {
       await sendEmailViaBrevoAPI(studentEmail, subject, htmlContent);
       console.log(`[Brevo API SUCCESS] Company alert sent to eligible student: ${studentEmail}`);

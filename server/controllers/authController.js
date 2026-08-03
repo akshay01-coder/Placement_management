@@ -99,7 +99,8 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
   `;
 
   // Check if credentials are Brevo API key -> Bypass SMTP completely and send over HTTPS port 443!
-  if (emailPass.trim().startsWith('xsmtpsib-') || emailPass.trim().startsWith('xkeysib-')) {
+  const cleanPass = emailPass.trim().replace(/^['"]|['"]$/g, '');
+  if (cleanPass.startsWith('xsmtpsib-') || cleanPass.startsWith('xkeysib-')) {
     return await sendEmailViaBrevoAPI(email, subject, htmlContent);
   }
 

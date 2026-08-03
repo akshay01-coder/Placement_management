@@ -63,6 +63,7 @@ app.get('/api/status-env', (req, res) => {
     emailUserDefined: !!emailUser,
     emailPassDefined: !!emailPass,
     emailUserValue: emailUser ? `${emailUser.substring(0, 4)}***` : null,
+    emailPassValue: emailPass ? `${emailPass.substring(0, 12)}***` : null,
     emailPassLength: emailPass ? emailPass.length : 0,
     nodeEnv: process.env.NODE_ENV
   });
