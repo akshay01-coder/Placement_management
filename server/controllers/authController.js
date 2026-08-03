@@ -108,23 +108,23 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
   const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
   const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
 
-  let transporter;
+ let transporter;
   try {
+    const port = Number(smtpPort) || 2525; // Ensures port is a Number
+
     transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
+      host: smtpHost || 'smtp-relay.brevo.com',
+      port: port,
+      secure: port === 465, // Port 2525 & 587 ke liye ALWAYS false
       auth: {
-        user: emailUser,
-        pass: emailPass
+        user: emailUser, // Must be your Brevo login email
+        pass: emailPass  // Must be Brevo SMTP key (xkeysib... or xsmtpsib...)
       },
       tls: {
         rejectUnauthorized: false
       },
       family: 4,
-      lookup: (hostname, options, callback) => {
-        dns.lookup(hostname, { family: 4 }, callback);
-      }
+      connectionTimeout: 10000 // 10 sec timeout safety
     });
     console.log('[SMTP] Nodemailer transporter created successfully.');
   } catch (err) {
