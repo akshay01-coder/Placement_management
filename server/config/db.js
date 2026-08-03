@@ -52,6 +52,16 @@ const connectDB = async () => {
     console.log('Connecting to MongoDB Atlas...');
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`MongoDB Connected Successfully (Atlas Host: ${conn.connection.host})`);
+    
+    // Drop the legacy unique phone index to allow duplicate phone numbers on signup
+    try {
+      await User.collection.dropIndex('phone_1');
+      console.log('Successfully dropped legacy unique phone index to allow duplicate phone numbers across accounts.');
+    } catch (indexErr) {
+      // Index might not exist in the collection yet (or is already dropped)
+      console.log('Unique phone index check complete (already dropped or not present).');
+    }
+
     await seedAdmin();
   } catch (error) {
     console.error(`\n❌ [DATABASE CONNECTION ERROR] Failed to connect to MongoDB Atlas!`);

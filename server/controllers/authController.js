@@ -230,12 +230,6 @@ export const registerStudent = async (req, res) => {
       });
     }
 
-    if (phone) {
-      const phoneExists = await User.findOne({ phone: phone.trim() });
-      if (phoneExists) {
-        return res.status(400).json({ success: false, message: 'A user with this mobile number already exists.' });
-      }
-    }
 
     // Create the verified student user directly
     const student = await User.create({
