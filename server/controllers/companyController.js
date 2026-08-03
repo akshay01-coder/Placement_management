@@ -22,6 +22,8 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
     }
   });
 
+  const frontendUrl = process.env.FRONTEND_URL || 'https://placement-management-gamma.vercel.app';
+
   const mailOptions = {
     from: `"Placement Portal" <${emailUser}>`,
     to: studentEmail,
@@ -30,10 +32,10 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; background-color: #0f172a; border-radius: 16px; color: #f8fafc; border: 1px solid rgba(99, 102, 241, 0.2);">
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="display: inline-block; padding: 12px; background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); border-radius: 12px; margin-bottom: 10px;">
-            <span style="font-size: 24px; font-weight: bold; color: #ffffff;">SPMS</span>
+            <span style="font-size: 24px; font-weight: bold; color: #ffffff;">NextHire</span>
           </div>
           <h2 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: bold; letter-spacing: 0.5px;">New Placement Drive Alert!</h2>
-          <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Smart Placement Management System</p>
+          <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 14px;">Your Gateway to Career Success</p>
         </div>
 
         <div style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
@@ -79,7 +81,7 @@ const sendCompanyAlertEmail = async (studentEmail, studentName, companyDetails) 
 
         <div style="text-align: center; margin-top: 10px;">
           <p style="font-size: 14px; color: #94a3b8; margin-bottom: 20px;">You are eligible for this recruitment drive. Click below to apply directly on the portal:</p>
-          <a href="http://localhost:5173/login?redirect=/viewapply" style="display: inline-block; background: linear-gradient(to right, #ec4899, #8b5cf6, #3b82f6); color: #ffffff; text-decoration: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); transition: transform 0.2s;">
+          <a href="${frontendUrl}/login?redirect=/viewapply" style="display: inline-block; background: linear-gradient(to right, #ec4899, #8b5cf6, #3b82f6); color: #ffffff; text-decoration: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); transition: transform 0.2s;">
             Apply Now
           </a>
         </div>

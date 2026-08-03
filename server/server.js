@@ -14,15 +14,15 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { testEmail } from './controllers/authController.js';
 
-// Load environment variables
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
 // Resolve __dirname in ES module scope
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables dynamically based on file directory
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const app = express();
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -47,6 +47,20 @@ app.get('/api/status', (req, res) => {
     status: 'success',
     message: 'Placement Management System API is running smoothly.',
     timestamp: new Date()
+  });
+});
+
+// Diagnostic Environment Variable Status Route
+app.get('/api/status-env', (req, res) => {
+  const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+  const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+  
+  res.status(200).json({
+    emailUserDefined: !!emailUser,
+    emailPassDefined: !!emailPass,
+    emailUserValue: emailUser ? `${emailUser.substring(0, 4)}***` : null,
+    emailPassLength: emailPass ? emailPass.length : 0,
+    nodeEnv: process.env.NODE_ENV
   });
 });
 
