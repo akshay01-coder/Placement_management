@@ -41,7 +41,8 @@ const sendOTPEmail = async (email, otp, type = 'verification') => {
       auth: {
         user: emailUser,
         pass: emailPass
-      }
+      },
+      family: 4
     });
     console.log('[SMTP] Nodemailer transporter created successfully.');
   } catch (err) {

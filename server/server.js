@@ -3,7 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dns from 'dns';
 import connectDB from './config/db.js';
+
+// Force Node to prefer IPv4 DNS resolution first to bypass Render IPv6 network unreachable blocks for SMTP/Gmail
+dns.setDefaultResultOrder('ipv4first');
 
 // Route Imports
 import authRoutes from './routes/authRoutes.js';
